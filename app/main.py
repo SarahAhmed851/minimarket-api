@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import health, users
+from app.routers import health, users, products
 
 # Create all database tables
 # This creates the tables defined in your models if they don't exist
@@ -40,6 +40,7 @@ app.add_middleware(
 # Include routers (connect all the endpoints)
 app.include_router(health.router)
 app.include_router(users.router)
+app.include_router(products.router)
 
 
 # You can also add a startup event for any initialization

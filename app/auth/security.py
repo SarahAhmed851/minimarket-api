@@ -16,13 +16,20 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.database import get_db
+from app.models.user import User
 
 # Password hashing context using bcrypt
-# "bcrypt" is the algorithm, "deprecated='auto'" handles old hashes
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Security scheme for JWT token in Authorization header
+security = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
@@ -32,9 +39,6 @@ def hash_password(password: str) -> str:
     Example:
         hash_password("mypassword123") 
         → "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4...."
-    
-    The hash is different every time (due to "salt"), but
-    verify_password() can still check if they match.
     """
     return pwd_context.hash(password)
 
@@ -58,10 +62,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     - A token is like a temporary "badge" that proves who you are
     - It contains encoded data (like user ID) and an expiration time
     - The server can verify it's real using the SECRET_KEY
-    
-    Example:
-        create_access_token({"sub": "user@email.com"})
-        → "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi..."
     """
     to_encode = data.copy()
     
@@ -81,3 +81,43 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     )
     
     return encoded_jwt
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Get the currently logged-in user from the JWT token.
+    
+    How it works:
+    1. User sends request with: Authorization: Bearer <token>
+    2. We extract and decode the token
+    3. We get the user's email from the token
+    4. We fetch the user from the database
+    5. We return the User object
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.ALGORITHM]
+        )
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    
+    return user
