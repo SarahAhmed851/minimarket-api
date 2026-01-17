@@ -1,0 +1,28 @@
+# Environment variables (NEVER commit these!)
+.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

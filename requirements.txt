@@ -1,0 +1,31 @@
+# FastAPI - the web framework (like Express for Python)
+fastapi==0.115.0
+
+# Uvicorn - the server that runs your app
+uvicorn==0.30.6
+
+# SQLAlchemy - talks to your database
+sqlalchemy==2.0.35
+
+# Alembic - database migrations (like Flyway for Python)
+alembic==1.13.3
+
+# Python-dotenv - reads your .env file
+python-dotenv==1.0.1
+
+# Passlib + bcrypt - secure password hashing
+passlib==1.7.4
+bcrypt==4.1.2
+
+# Python-jose - for JWT tokens (login tokens)
+python-jose[cryptography]==3.3.0
+
+# Pydantic - data validation (checks if user input is correct)
+pydantic[email-validator]==2.9.2
+
+# Pydantic Settings - for reading .env files
+pydantic-settings==2.5.2
+
+# Databases + aiosqlite - async database support for SQLite
+databases==0.9.0
+aiosqlite==0.20.0
