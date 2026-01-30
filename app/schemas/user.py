@@ -10,7 +10,7 @@ Think of schemas as "contracts" - they guarantee the data shape.
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator,validator
 import re
 
 
@@ -53,15 +53,25 @@ class UserCreate(BaseModel):
         return v
     
     # Custom validator for password strength
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v):
-        """Password must contain at least one letter and one number."""
-        if not re.search(r"[a-zA-Z]", v):
-            raise ValueError("Password must contain at least one letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one number")
+    #@field_validator("password")
+    #@classmethod
+    #def password_strength(cls, v):
+        #"""Password must contain at least one letter and one number."""
+        #if not re.search(r"[a-zA-Z]", v):
+            #raise ValueError("Password must contain at least one letter")
+        #if not re.search(r"\d", v):
+            #raise ValueError("Password must contain at least one number")
+        #return v
+    
+    @validator('password')
+    def validate_password_strength(cls, v):
+        if not any(char.isdigit() for char in v):
+           raise ValueError('Password must contain at least one number')
+        if not any(char.isupper() for char in v):
+           raise ValueError('Password must contain at least one uppercase letter')
+    
         return v
+     
 
 
 class UserLogin(BaseModel):

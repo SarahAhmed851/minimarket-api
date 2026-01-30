@@ -16,6 +16,7 @@ from typing import Optional
 from app.models.user import User
 from app.schemas.user import UserCreate
 from app.auth.security import hash_password, verify_password
+from fastapi import HTTPException, status
 
 
 class UserService:
@@ -71,11 +72,13 @@ class UserService:
         """
         # Check if email already exists
         if self.get_user_by_email(user_data.email):
-            raise ValueError("Email already registered")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+            
         
         # Check if username already exists
         if self.get_user_by_username(user_data.username):
-            raise ValueError("Username already taken")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
+            
         
         # Create new user with hashed password
         db_user = User(
@@ -106,14 +109,26 @@ class UserService:
         """
         # Find user by email
         user = self.get_user_by_email(email)
+        if not user:
+            raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+        
         
         # If user doesn't exist, authentication fails
-        if not user:
-            return None
+        #if not user:
+            #return None
         
         # Check if password matches
         if not verify_password(password, user.hashed_password):
-            return None
+            raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+        
+        #if not verify_password(password, user.hashed_password):
+            #return None
         
         # Success! Return the user
         return user
